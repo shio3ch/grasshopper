@@ -1,0 +1,42 @@
+---
+import { formatDate, toISODateString } from "../utils/formatDate";
+
+interface Props {
+  title: string;
+  description: string;
+  pubDate: Date;
+  tags?: string[];
+  slug: string;
+}
+
+const { title, description, pubDate, tags = [], slug } = Astro.props;
+---
+
+<article
+  style="background:#fff;border:1px solid #eaeaea;border-radius:0.5rem;padding:1.5rem;margin-bottom:1.5rem;"
+>
+  <h2 style="font-size:1.25rem;font-weight:700;margin-bottom:0.5rem;">
+    <a href={`/blog/${slug}/`} style="color:#1a1a1a;">{title}</a>
+  </h2>
+  <p style="color:#555;font-size:0.875rem;margin-bottom:0.75rem;">
+    <time datetime={toISODateString(pubDate)}>{formatDate(pubDate)}</time>
+  </p>
+  <p style="color:#444;margin-bottom:1rem;font-size:0.95rem;">{description}</p>
+  {
+    tags.length > 0 && (
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;">
+        {tags.map((tag) => (
+          <span style="background:#eef2ff;color:#3730a3;padding:0.2rem 0.6rem;border-radius:9999px;font-size:0.8rem;">
+            #{tag}
+          </span>
+        ))}
+      </div>
+    )
+  }
+  <a
+    href={`/blog/${slug}/`}
+    style="font-size:0.9rem;color:#0070f3;font-weight:600;"
+  >
+    続きを読む &rarr;
+  </a>
+</article>
