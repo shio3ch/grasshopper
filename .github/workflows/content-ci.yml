@@ -5,12 +5,13 @@ on:
     branches:
       - main
     paths:
-      - "src/content/**"
       - "src/**"
 
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
