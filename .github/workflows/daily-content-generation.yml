@@ -1,0 +1,49 @@
+name: Daily Content Generation
+
+on:
+  schedule:
+    - cron: "0 23 * * *" # 毎日 8:00 JST
+  workflow_dispatch: # 手動実行用
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set date env
+        run: |
+          echo "TODAY=$(TZ=Asia/Tokyo date +%Y-%m-%d)" >> $GITHUB_ENV
+          echo "BRANCH=feature/content-$(TZ=Asia/Tokyo date +%Y%m%d)" >> $GITHUB_ENV
+
+      - name: Create feature branch
+        run: |
+          git checkout -b "$BRANCH"
+          git push origin "$BRANCH"
+
+      - name: Generate article with Claude Code
+        uses: anthropics/claude-code-action@beta
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt_file: .github/prompts/content-generation.md
+        env:
+          TODAY: ${{ env.TODAY }}
+
+      - name: Push commits
+        run: git push origin "$BRANCH"
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "feat: $TODAY 技術ニュースまとめ" \
+            --body "毎日8時の自動生成ワークフローによって作成されました。" \
+            --label "auto-merge"
