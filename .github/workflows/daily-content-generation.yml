@@ -22,16 +22,22 @@ jobs:
           echo "TODAY=$(TZ=Asia/Tokyo date +%Y-%m-%d)" >> $GITHUB_ENV
           echo "BRANCH=feature/content-$(TZ=Asia/Tokyo date +%Y%m%d)" >> $GITHUB_ENV
 
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Create feature branch
         run: |
-          git checkout -b "$BRANCH"
-          git push origin "$BRANCH"
+          git checkout -B "$BRANCH"
+          git push origin "$BRANCH" --force
 
       - name: Generate article with Claude Code
         uses: anthropics/claude-code-action@beta
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           prompt_file: .github/prompts/content-generation.md
+          mode: agent
         env:
           TODAY: ${{ env.TODAY }}
 
@@ -42,6 +48,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          gh label create "auto-merge" --color "#0075ca" --description "自動マージ対象" 2>/dev/null || true
           gh pr create \
             --base main \
             --head "$BRANCH" \
