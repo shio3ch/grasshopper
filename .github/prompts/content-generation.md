@@ -42,15 +42,60 @@ author: "grasshopper"
 
 ## 参照するニュースソース
 
-以下のソースを Web 検索して当日の最新情報を収集してください。
+**必ず Bash ツールで `curl` を使い、以下のソースから実際のコンテンツを取得してください。**
+情報を捏造してはいけません。取得できた記事のみを扱い、各記事には必ず元の URL をリンクとして貼ってください。
 
-- Hacker News (https://news.ycombinator.com/) — トップストーリー
-- Zenn トレンド (https://zenn.dev/trending) — 国内エンジニア向け
-- dev.to (https://dev.to/) — 英語圏エンジニアコミュニティ
-- GitHub Blog (https://github.blog/) — GitHub 公式発表
-- The Verge / TechCrunch — 主要テックニュース
+### 取得手順
 
-実在するニュースのみを扱い、情報を捏造しないこと。情報が少ない場合は「本日は主要なニュースが少なかった」と正直に記載してよい。
+1. **Hacker News トップストーリー**（JSON API で取得可能）
+   ```bash
+   # トップ記事 ID 一覧を取得（python3 で解析）
+   TOP_IDS=$(curl -s "https://hacker-news.firebaseio.com/v0/topstories.json" \
+     | python3 -c "import sys,json; ids=json.load(sys.stdin)[:20]; print(' '.join(map(str,ids)))")
+   # 各 ID の詳細を取得
+   for id in $TOP_IDS; do
+     curl -s "https://hacker-news.firebaseio.com/v0/item/${id}.json"
+   done
+   ```
+   → 各アイテムの `title` と `url` フィールドを記事に使用する。
+
+2. **Zenn トレンド**
+   ```bash
+   curl -s "https://zenn.dev/api/articles?order=trending&count=10" \
+     | python3 -c "
+import sys, json
+data = json.load(sys.stdin)
+for a in data.get('articles', []):
+    print(a.get('title',''), 'https://zenn.dev' + a.get('path',''))
+"
+   ```
+   → タイトルと URL を使用する。
+
+3. **GitHub Blog**
+   ```bash
+   curl -s "https://github.blog/feed/" \
+     | python3 -c "
+import sys
+from xml.etree import ElementTree as ET
+root = ET.fromstring(sys.stdin.read())
+for entry in root.findall('channel/item'):
+    title = entry.findtext('title') or ''
+    link  = entry.findtext('link') or ''
+    print(title, link)
+"
+   ```
+   → 記事タイトルと URL を抽出する。
+
+取得に失敗したソースはスキップしてよい。
+**取得できた記事が 1 本もない場合のみ**「本日は主要なニュースの取得ができませんでした」と記載する。
+
+### リンクの記載形式
+
+各トピックセクションには、参照した元記事への Markdown リンクを必ず含めること:
+
+```markdown
+詳細は [記事タイトル](https://example.com/article) を参照。
+```
 
 ## コミット手順
 

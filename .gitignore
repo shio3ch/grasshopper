@@ -24,3 +24,6 @@ pnpm-debug.log*
 
 # Cloudflare
 .wrangler/
+
+# Claude Code action transcript
+output.txt
