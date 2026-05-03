@@ -72,12 +72,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh label create "auto-merge" --color "#0075ca" --description "自動マージ対象" 2>/dev/null || true
-          gh pr create \
+          PR_URL=$(gh pr create \
             --base main \
             --head "$BRANCH" \
             --title "feat: $TODAY 技術ニュースまとめ" \
             --body "毎日8時の自動生成ワークフローによって作成されました。" \
-            --label "auto-merge"
+            --label "auto-merge")
+          gh pr merge "$PR_URL" --auto --squash --delete-branch
 
       - name: Cleanup branch on failure
         if: failure()
