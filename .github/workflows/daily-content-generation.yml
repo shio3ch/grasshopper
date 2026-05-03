@@ -32,14 +32,37 @@ jobs:
           git checkout -B "$BRANCH"
           git push origin "$BRANCH" --force
 
+      - name: Read prompt file
+        id: prompt
+        run: |
+          {
+            echo 'content<<HEREDOC'
+            cat .github/prompts/content-generation.md
+            echo 'HEREDOC'
+          } >> $GITHUB_OUTPUT
+
       - name: Generate article with Claude Code
         uses: anthropics/claude-code-action@beta
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          prompt_file: .github/prompts/content-generation.md
+          direct_prompt: ${{ steps.prompt.outputs.content }}
           mode: agent
         env:
           TODAY: ${{ env.TODAY }}
+
+      - name: Commit generated article (safety net)
+        run: |
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "feat: $TODAY 技術ニュースまとめを追加"
+          fi
+          COMMIT_COUNT=$(git rev-list origin/main..HEAD --count)
+          if [ "$COMMIT_COUNT" -eq 0 ]; then
+            echo "ERROR: Claude did not generate any content. No commits to push."
+            git status
+            exit 1
+          fi
+          echo "Ready to push $COMMIT_COUNT commit(s)."
 
       - name: Push commits
         run: git push origin "$BRANCH"
