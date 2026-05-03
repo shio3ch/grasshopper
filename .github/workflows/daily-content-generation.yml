@@ -55,3 +55,7 @@ jobs:
             --title "feat: $TODAY 技術ニュースまとめ" \
             --body "毎日8時の自動生成ワークフローによって作成されました。" \
             --label "auto-merge"
+
+      - name: Cleanup branch on failure
+        if: failure()
+        run: git push origin --delete "$BRANCH" || true
