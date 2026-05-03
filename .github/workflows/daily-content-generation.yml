@@ -32,11 +32,20 @@ jobs:
           git checkout -B "$BRANCH"
           git push origin "$BRANCH" --force
 
+      - name: Read prompt file
+        id: prompt
+        run: |
+          {
+            echo 'content<<HEREDOC'
+            cat .github/prompts/content-generation.md
+            echo 'HEREDOC'
+          } >> $GITHUB_OUTPUT
+
       - name: Generate article with Claude Code
         uses: anthropics/claude-code-action@beta
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          prompt_file: .github/prompts/content-generation.md
+          direct_prompt: ${{ steps.prompt.outputs.content }}
           mode: agent
         env:
           TODAY: ${{ env.TODAY }}
