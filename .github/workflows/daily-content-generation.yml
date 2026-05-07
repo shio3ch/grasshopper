@@ -49,6 +49,7 @@ jobs:
           allowed_tools: "WebFetch,WebSearch,Bash,Edit,MultiEdit,Glob,Grep,LS,Read,Write"
         env:
           TODAY: ${{ env.TODAY }}
+          DISALLOWED_TOOLS: ""
 
       - name: Commit generated article (safety net)
         run: |
