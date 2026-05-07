@@ -42,49 +42,23 @@ author: "grasshopper"
 
 ## 参照するニュースソース
 
-**必ず Bash ツールで `curl` を使い、以下のソースから実際のコンテンツを取得してください。**
+**必ず WebFetch ツールを使い、以下のソースから実際のコンテンツを取得してください。**
 情報を捏造してはいけません。取得できた記事のみを扱い、各記事には必ず元の URL をリンクとして貼ってください。
 
 ### 取得手順
 
-1. **Hacker News トップストーリー**（JSON API で取得可能）
-   ```bash
-   # トップ記事 ID 一覧を取得（python3 で解析）
-   TOP_IDS=$(curl -s "https://hacker-news.firebaseio.com/v0/topstories.json" \
-     | python3 -c "import sys,json; ids=json.load(sys.stdin)[:20]; print(' '.join(map(str,ids)))")
-   # 各 ID の詳細を取得
-   for id in $TOP_IDS; do
-     curl -s "https://hacker-news.firebaseio.com/v0/item/${id}.json"
-   done
-   ```
-   → 各アイテムの `title` と `url` フィールドを記事に使用する。
+1. **Hacker News トップストーリー**（JSON API）
+   - `https://hacker-news.firebaseio.com/v0/topstories.json` を WebFetch で取得し、先頭 20 件の ID を得る
+   - 各 ID に対して `https://hacker-news.firebaseio.com/v0/item/{id}.json` を WebFetch で取得する
+   - 各アイテムの `title` と `url` フィールドを記事に使用する
 
 2. **Zenn トレンド**
-   ```bash
-   curl -s "https://zenn.dev/api/articles?order=trending&count=10" \
-     | python3 -c "
-import sys, json
-data = json.load(sys.stdin)
-for a in data.get('articles', []):
-    print(a.get('title',''), 'https://zenn.dev' + a.get('path',''))
-"
-   ```
-   → タイトルと URL を使用する。
+   - `https://zenn.dev/api/articles?order=trending&count=10` を WebFetch で取得する
+   - `articles` 配列の各要素から `title` と `path`（`https://zenn.dev` を prefix に付ける）を使用する
 
 3. **GitHub Blog**
-   ```bash
-   curl -s "https://github.blog/feed/" \
-     | python3 -c "
-import sys
-from xml.etree import ElementTree as ET
-root = ET.fromstring(sys.stdin.read())
-for entry in root.findall('channel/item'):
-    title = entry.findtext('title') or ''
-    link  = entry.findtext('link') or ''
-    print(title, link)
-"
-   ```
-   → 記事タイトルと URL を抽出する。
+   - `https://github.blog/feed/` を WebFetch で取得する（RSS/Atom フィード）
+   - 各エントリの `title` と `link` を抽出する
 
 取得に失敗したソースはスキップしてよい。
 **取得できた記事が 1 本もない場合のみ**「本日は主要なニュースの取得ができませんでした」と記載する。
