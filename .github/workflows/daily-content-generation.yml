@@ -42,11 +42,11 @@ jobs:
           } >> $GITHUB_OUTPUT
 
       - name: Generate article with Claude Code
-        uses: anthropics/claude-code-action@beta
+        uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           direct_prompt: ${{ steps.prompt.outputs.content }}
-          mode: agent
+          allowed_tools: "WebFetch,WebSearch,Bash,Edit,MultiEdit,Glob,Grep,LS,Read,Write"
         env:
           TODAY: ${{ env.TODAY }}
 
