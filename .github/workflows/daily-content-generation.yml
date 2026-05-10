@@ -54,10 +54,6 @@ jobs:
         env:
           TODAY: ${{ env.TODAY }}
 
-      - name: Restore git credentials after Claude action
-        run: |
-          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
-
       - name: Commit generated article (safety net)
         run: |
           git add src/content/blog/
@@ -73,7 +69,13 @@ jobs:
           echo "Ready to push $COMMIT_COUNT commit(s)."
 
       - name: Push commits
-        run: git push origin "$BRANCH"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global --unset-all http.https://github.com/.extraheader || true
+          git config --local --unset-all http.https://github.com/.extraheader || true
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          git push origin "$BRANCH"
 
       - name: Create Pull Request
         env:
