@@ -56,7 +56,7 @@ jobs:
 
       - name: Commit generated article (safety net)
         run: |
-          git add -A
+          git add src/content/blog/
           if ! git diff --cached --quiet; then
             git commit -m "feat: $TODAY 技術ニュースまとめを追加"
           fi
