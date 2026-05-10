@@ -54,6 +54,10 @@ jobs:
         env:
           TODAY: ${{ env.TODAY }}
 
+      - name: Restore git credentials after Claude action
+        run: |
+          git remote set-url origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+
       - name: Commit generated article (safety net)
         run: |
           git add src/content/blog/
